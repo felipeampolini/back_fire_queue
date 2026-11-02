@@ -14,6 +14,8 @@ const envSchema = z.object({
     .or(z.literal('').transform(() => undefined)),
   SQS_QUEUE_URL: z.url(),
   SQS_DLQ_URL: z.url(),
+  // Chave exigida no header x-api-key do POST /notifications
+  API_KEY: z.string().min(16, { error: 'API_KEY deve ter pelo menos 16 caracteres' }),
 });
 
 export type Config = {
@@ -21,6 +23,7 @@ export type Config = {
   logLevel: z.infer<typeof envSchema>['LOG_LEVEL'];
   aws: { region: string; endpoint?: string };
   sqs: { queueUrl: string; dlqUrl: string };
+  apiKey: string;
 };
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -36,5 +39,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     logLevel: e.LOG_LEVEL,
     aws: { region: e.AWS_REGION, endpoint: e.AWS_ENDPOINT_URL },
     sqs: { queueUrl: e.SQS_QUEUE_URL, dlqUrl: e.SQS_DLQ_URL },
+    apiKey: e.API_KEY,
   };
 }

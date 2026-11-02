@@ -1,14 +1,14 @@
 import { afterAll, describe, expect, it } from 'vitest';
-import { buildApp } from '../../src/api/app.js';
+import { buildTestApp } from '../helpers/app.js';
 
 describe('GET /health', () => {
-  const app = buildApp({ logLevel: 'silent' });
+  const { app } = buildTestApp();
 
   afterAll(async () => {
     await app.close();
   });
 
-  it('responde 200 com status ok', async () => {
+  it('responde 200 com status ok, sem exigir API key', async () => {
     const response = await app.inject({ method: 'GET', url: '/health' });
 
     expect(response.statusCode).toBe(200);

@@ -35,11 +35,11 @@ format:
 typecheck:
 	$(RUN) npm run typecheck
 
-test: ## Roda os testes uma vez
-	$(RUN) npm test
+test: ## Roda os testes uma vez (sobe o ElasticMQ para os testes de integração)
+	docker compose run --rm api npm test
 
 test-watch: ## Roda os testes e repete a cada alteração
-	$(RUN) npm run test:watch
+	docker compose run --rm api npm run test:watch
 
 build: ## Gera a imagem de produção
 	docker build --target prod -t back-fire-queue .
