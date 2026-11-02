@@ -2,7 +2,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../../src/api/app.js';
 
 describe('GET /health', () => {
-  const app = buildApp();
+  const app = buildApp({ logLevel: 'silent' });
 
   afterAll(async () => {
     await app.close();
