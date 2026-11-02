@@ -20,6 +20,7 @@ describe('loadConfig', () => {
       sqs: { queueUrl: validEnv.SQS_QUEUE_URL, dlqUrl: validEnv.SQS_DLQ_URL },
       apiKey: validEnv.API_KEY,
       firebase: { credentialsPath: undefined, dryRun: false },
+      worker: { batchSize: 10, maxAttempts: 5 },
     });
   });
 
@@ -61,5 +62,9 @@ describe('loadConfig', () => {
       credentialsPath: '/app/secrets/firebase-sa.json',
       dryRun: true,
     });
+  });
+
+  it('limita o lote do worker a 10 mensagens (máximo do SQS)', () => {
+    expect(() => loadConfig({ ...validEnv, WORKER_BATCH_SIZE: '11' })).toThrow(/WORKER_BATCH_SIZE/);
   });
 });

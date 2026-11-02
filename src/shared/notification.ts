@@ -43,6 +43,8 @@ export const notificationMessageSchema = notificationRequestSchema.and(
   z.object({
     id: z.uuid(),
     createdAt: z.iso.datetime(),
+    // Número da tentativa de envio. Ausente = primeira (a API não envia este campo).
+    attempt: z.number().int().min(1).optional(),
   }),
 );
 

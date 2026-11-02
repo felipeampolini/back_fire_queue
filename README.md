@@ -38,6 +38,24 @@ Copie o valor para `API_KEY` no `.env` e reinicie a API (`make down && make up`)
 
 A chave é única por ambiente e nunca deve ser versionada.
 
+## Como o worker processa a fila
+
+1. Lê até `WORKER_BATCH_SIZE` mensagens por vez, com _long polling_ (espera até 20 s por mensagens).
+2. Processa o lote em paralelo e envia cada notificação ao Firebase.
+3. Decide pelo código de erro de cada destino:
+
+| Resultado                                                      | Ação                                                                                     |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Sucesso                                                        | Remove a mensagem da fila                                                                |
+| Falha definitiva (token inválido/expirado, mensagem inválida)  | Registra no log e remove — tentar de novo não adianta                                    |
+| Falha temporária (instabilidade do FCM, limite de envio, rede) | Reenfileira com atraso crescente (10 s, 20 s, 40 s...), só para os destinos que falharam |
+| Tentativas esgotadas (`WORKER_MAX_ATTEMPTS`)                   | Envia para a DLQ com o motivo no atributo `reason`                                       |
+| Mensagem fora do contrato                                      | Envia direto para a DLQ                                                                  |
+
+A mensagem original só é removida depois que a nova (ou a da DLQ) foi gravada: se algo falhar no meio, o pior caso é uma notificação duplicada, nunca perdida. Se o worker cair durante o processamento, a mensagem volta a ficar visível após o _visibility timeout_ e é processada de novo.
+
+Ao receber `SIGTERM`/`SIGINT`, o worker para de ler a fila e termina as mensagens em andamento antes de sair.
+
 ## Firebase
 
 O worker envia as notificações com o [Firebase Admin SDK](https://firebase.google.com/docs/admin/setup), autenticado por uma **Service Account**:

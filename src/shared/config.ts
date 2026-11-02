@@ -21,6 +21,13 @@ const envSchema = z.object({
   GOOGLE_APPLICATION_CREDENTIALS: z.preprocess(emptyAsUndefined, z.string().optional()),
   // true = o FCM só valida a mensagem, sem entregar (útil sem dispositivo real)
   FCM_DRY_RUN: z.preprocess(emptyAsUndefined, z.stringbool().default(false)),
+  // Worker: mensagens por leitura da fila (máximo do SQS: 10)
+  WORKER_BATCH_SIZE: z.preprocess(
+    emptyAsUndefined,
+    z.coerce.number().int().min(1).max(10).default(10),
+  ),
+  // Worker: tentativas de envio antes de mandar para a DLQ
+  WORKER_MAX_ATTEMPTS: z.preprocess(emptyAsUndefined, z.coerce.number().int().min(1).default(5)),
 });
 
 export type Config = {
@@ -30,6 +37,7 @@ export type Config = {
   sqs: { queueUrl: string; dlqUrl: string };
   apiKey: string;
   firebase: { credentialsPath?: string; dryRun: boolean };
+  worker: { batchSize: number; maxAttempts: number };
 };
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -47,5 +55,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     sqs: { queueUrl: e.SQS_QUEUE_URL, dlqUrl: e.SQS_DLQ_URL },
     apiKey: e.API_KEY,
     firebase: { credentialsPath: e.GOOGLE_APPLICATION_CREDENTIALS, dryRun: e.FCM_DRY_RUN },
+    worker: { batchSize: e.WORKER_BATCH_SIZE, maxAttempts: e.WORKER_MAX_ATTEMPTS },
   };
 }
