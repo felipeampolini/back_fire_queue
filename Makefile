@@ -6,7 +6,7 @@ AWS = docker run --rm --network back_fire_queue_default \
 	amazon/aws-cli --endpoint-url http://elasticmq:9324
 QUEUE_ATTRS = ApproximateNumberOfMessages ApproximateNumberOfMessagesNotVisible
 
-.PHONY: up down logs install npm sh lint format typecheck test test-watch build queues
+.PHONY: up down logs install npm sh lint format typecheck test test-watch build queues postman
 
 up: ## Sobe ElasticMQ, API e worker
 	docker compose up --build
@@ -50,3 +50,9 @@ queues: ## Mostra quantas mensagens há na fila principal e na DLQ
 		$(AWS) sqs get-queue-attributes --queue-url http://elasticmq:9324/000000000000/$$q \
 			--attribute-names $(QUEUE_ATTRS) --output table --query Attributes; \
 	done
+
+postman: ## Roda a collection do Postman contra a API (precisa do `make up` rodando)
+	@set -a; . ./.env; set +a; \
+	docker run --rm --network back_fire_queue_default -v "$(CURDIR)/docs/postman:/etc/newman" \
+		postman/newman:6-alpine run back_fire_queue.postman_collection.json \
+		-e local.postman_environment.json --env-var baseUrl=http://api:3000 --env-var "apiKey=$$API_KEY"

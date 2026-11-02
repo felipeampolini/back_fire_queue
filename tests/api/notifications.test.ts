@@ -57,6 +57,18 @@ describe('POST /notifications', () => {
     expect(publish).not.toHaveBeenCalled();
   });
 
+  it('responde 400 explicando o problema quando o JSON está malformado', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/notifications',
+      headers: { 'x-api-key': TEST_API_KEY, 'content-type': 'application/json' },
+      payload: '{"target": ',
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json().error).toMatch(/JSON/i);
+  });
+
   it('responde 503 quando a fila está indisponível', async () => {
     publish.mockRejectedValueOnce(new Error('SQS fora do ar'));
 

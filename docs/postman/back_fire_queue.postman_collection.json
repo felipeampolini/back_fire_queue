@@ -1,0 +1,626 @@
+{
+  "info": {
+    "_postman_id": "c9bd1602-370f-4a49-a2d1-12defcb90ba2",
+    "name": "back_fire_queue",
+    "description": "Testes manuais da API de fila de notificações Firebase (FCM).\n\n1. Importe esta collection e o environment `local`.\n2. No environment, preencha `apiKey` com o valor de `API_KEY` do seu `.env`.\n3. Para receber uma notificação de verdade, troque `deviceToken` por um token real.\n\nA autenticação (header `x-api-key`) é configurada uma vez na collection e herdada pelas requisições.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "key",
+        "value": "x-api-key",
+        "type": "string"
+      },
+      {
+        "key": "value",
+        "value": "{{apiKey}}",
+        "type": "string"
+      },
+      {
+        "key": "in",
+        "value": "header",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "lastNotificationId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Infra",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Verifica se a API está no ar. Não exige API key.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('status ok', () => pm.expect(pm.response.json().status).to.eql('ok'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Especificação OpenAPI",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/docs/json",
+              "host": ["{{baseUrl}}"],
+              "path": ["docs", "json"]
+            },
+            "description": "Mesma especificação exibida no Swagger UI em /docs.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Notificações — sucesso (202)",
+      "item": [
+        {
+          "name": "Para um dispositivo (token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target\": {\n    \"type\": \"token\",\n    \"value\": \"{{deviceToken}}\"\n  },\n  \"notification\": {\n    \"title\": \"Pedido enviado\",\n    \"body\": \"Seu pedido #42 saiu para entrega\"\n  },\n  \"data\": {\n    \"orderId\": \"42\"\n  },\n  \"priority\": \"high\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 202', () => pm.response.to.have.status(202));",
+                  "pm.test('Retorna o id da notificação', () => pm.expect(pm.response.json().id).to.be.a('string'));",
+                  "pm.collectionVariables.set('lastNotificationId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Para vários dispositivos (tokens)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target\": {\n    \"type\": \"tokens\",\n    \"value\": [\n      \"{{deviceToken}}\",\n      \"outro-token-de-exemplo\"\n    ]\n  },\n  \"notification\": {\n    \"title\": \"Promoção\",\n    \"body\": \"Frete grátis hoje\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 202', () => pm.response.to.have.status(202));",
+                  "pm.test('Retorna o id da notificação', () => pm.expect(pm.response.json().id).to.be.a('string'));",
+                  "pm.collectionVariables.set('lastNotificationId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Para um tópico",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target\": {\n    \"type\": \"topic\",\n    \"value\": \"{{topic}}\"\n  },\n  \"notification\": {\n    \"title\": \"Novidade\",\n    \"body\": \"Confira os lançamentos da semana\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 202', () => pm.response.to.have.status(202));",
+                  "pm.test('Retorna o id da notificação', () => pm.expect(pm.response.json().id).to.be.a('string'));",
+                  "pm.collectionVariables.set('lastNotificationId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mensagem silenciosa (só data)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"]
+            },
+            "description": "Sem `notification`: nada aparece na tela; o app recebe os dados e decide o que fazer.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target\": {\n    \"type\": \"token\",\n    \"value\": \"{{deviceToken}}\"\n  },\n  \"data\": {\n    \"type\": \"sync\",\n    \"resource\": \"orders\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 202', () => pm.response.to.have.status(202));",
+                  "pm.test('Retorna o id da notificação', () => pm.expect(pm.response.json().id).to.be.a('string'));",
+                  "pm.collectionVariables.set('lastNotificationId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Com TTL e prioridade normal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"]
+            },
+            "description": "`ttlSeconds`: por quanto tempo o FCM tenta entregar se o dispositivo estiver offline.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target\": {\n    \"type\": \"token\",\n    \"value\": \"{{deviceToken}}\"\n  },\n  \"notification\": {\n    \"title\": \"Lembrete\",\n    \"body\": \"Sua consulta é amanhã\"\n  },\n  \"priority\": \"normal\",\n  \"ttlSeconds\": 3600\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 202', () => pm.response.to.have.status(202));",
+                  "pm.test('Retorna o id da notificação', () => pm.expect(pm.response.json().id).to.be.a('string'));",
+                  "pm.collectionVariables.set('lastNotificationId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Notificações — erros esperados",
+      "item": [
+        {
+          "name": "Sem API key (401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target\": {\n    \"type\": \"token\",\n    \"value\": \"{{deviceToken}}\"\n  },\n  \"notification\": {\n    \"title\": \"Oi\",\n    \"body\": \"Teste\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 401', () => pm.response.to.have.status(401));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "API key inválida (401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target\": {\n    \"type\": \"token\",\n    \"value\": \"{{deviceToken}}\"\n  },\n  \"notification\": {\n    \"title\": \"Oi\",\n    \"body\": \"Teste\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "key",
+                  "value": "x-api-key",
+                  "type": "string"
+                },
+                {
+                  "key": "value",
+                  "value": "chave-errada",
+                  "type": "string"
+                },
+                {
+                  "key": "in",
+                  "value": "header",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 401', () => pm.response.to.have.status(401));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Campos inválidos (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"]
+            },
+            "description": "Lista vazia de tokens e valor numérico em `data` (o FCM só aceita strings).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target\": {\n    \"type\": \"tokens\",\n    \"value\": []\n  },\n  \"data\": {\n    \"count\": 1\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Lista os campos com erro', () => pm.expect(pm.response.json().details).to.be.an('array').that.is.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sem notification e sem data (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target\": {\n    \"type\": \"token\",\n    \"value\": \"{{deviceToken}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tópico com caracteres inválidos (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target\": {\n    \"type\": \"topic\",\n    \"value\": \"tópico com espaço\"\n  },\n  \"notification\": {\n    \"title\": \"Oi\",\n    \"body\": \"Teste\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mais de 500 tokens (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"]
+            },
+            "description": "O FCM aceita no máximo 500 tokens por envio. O corpo é gerado pelo script de pré-requisição.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target\": { \"type\": \"tokens\", \"value\": {{tooManyTokens}} },\n  \"notification\": { \"title\": \"Oi\", \"body\": \"Teste\" }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const tokens = Array.from({ length: 501 }, (_, i) => `token-${i}`);",
+                  "pm.variables.set('tooManyTokens', JSON.stringify(tokens));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Payload acima de 4 KB (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target\": { \"type\": \"token\", \"value\": \"{{deviceToken}}\" },\n  \"data\": { \"big\": \"{{bigValue}}\" }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.variables.set('bigValue', 'x'.repeat(5000));"]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "JSON malformado (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"target\": ",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

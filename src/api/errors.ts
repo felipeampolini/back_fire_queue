@@ -22,6 +22,13 @@ export function errorHandler(error: FastifyError, request: FastifyRequest, reply
     });
   }
 
-  // Demais erros: o Fastify já trata (ex.: JSON malformado vira 400)
-  throw error;
+  // Erros do cliente detectados pelo Fastify (ex.: JSON malformado): a mensagem explica o problema
+  const statusCode = error.statusCode ?? 500;
+  if (statusCode < 500) {
+    return reply.code(statusCode).send({ error: error.message });
+  }
+
+  // Erro inesperado: registra o detalhe no log e não expõe nada interno ao cliente
+  request.log.error({ err: error }, 'erro inesperado');
+  return reply.code(500).send({ error: 'Erro interno' });
 }
