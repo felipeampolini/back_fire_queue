@@ -15,11 +15,12 @@ cp .env.example .env   # preencha os valores
 make up                # sobe ElasticMQ (emulador de SQS), API e worker
 ```
 
-| Endereço                          | O que é                   |
-| --------------------------------- | ------------------------- |
-| `http://localhost:3000/health`    | Health check              |
-| `http://localhost:3000/docs`      | Swagger UI (documentação) |
-| `http://localhost:3000/docs/json` | Especificação OpenAPI 3.1 |
+| Endereço                          | O que é                                      |
+| --------------------------------- | -------------------------------------------- |
+| `http://localhost:3000/health`    | Health check                                 |
+| `http://localhost:3000/docs`      | Swagger UI (documentação)                    |
+| `http://localhost:3000/docs/json` | Especificação OpenAPI 3.1                    |
+| `http://localhost:3000/test/`     | Página de teste de notificações (ver abaixo) |
 
 A porta pode ser alterada com `API_HOST_PORT` no `.env`.
 
@@ -72,6 +73,25 @@ make fcm-check
 ```
 
 Com `FCM_DRY_RUN=true`, o worker envia todas as notificações em modo de validação: o Firebase confere a mensagem, mas não entrega.
+
+## Página de teste (receber notificações no navegador)
+
+Em `/test/` há uma página que recebe notificações do Firebase no próprio navegador — não é preciso ter um app mobile.
+
+1. Abra `http://localhost:3000/test/` e clique em **Permitir e gerar token**.
+2. Informe a API key, ajuste título e mensagem e clique em **Enviar**.
+3. A notificação percorre o fluxo completo (API → SQS → worker → Firebase) e chega ao navegador: na lista da página, se ela estiver em foco, ou como notificação do sistema, se estiver em segundo plano.
+
+Também funciona no celular: no Android pelo Chrome; no iPhone (iOS 16.4+), adicionando a página à Tela de Início pelo Safari e abrindo pelo ícone.
+
+Configuração: a página só é publicada quando todas as variáveis `FIREBASE_WEB_*` estão no `.env`. Os valores vêm do console do Firebase:
+
+| Variável                                                                 | Onde encontrar                                                                            |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| `FIREBASE_WEB_API_KEY`, `_PROJECT_ID`, `_MESSAGING_SENDER_ID`, `_APP_ID` | **Configurações do projeto → Geral → Seus apps** (app Web): objeto `firebaseConfig`       |
+| `FIREBASE_WEB_VAPID_KEY`                                                 | **Configurações do projeto → Cloud Messaging → Certificados push da Web** (chave pública) |
+
+São valores públicos (identificam o projeto no navegador; não permitem enviar notificações). Notificações push exigem HTTPS ou `localhost`.
 
 ## Testes
 

@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Teste de notificações</title>
+    <link rel="manifest" href="/test/manifest.webmanifest" />
+    <link rel="icon" href="/test/icon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#2f6fed" />
+    <!-- iOS: necessário para receber notificações com a página adicionada à Tela de Início -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <style>
+      :root {
+        --bg: #f6f7f9;
+        --card: #ffffff;
+        --text: #1b1f24;
+        --muted: #5b6470;
+        --border: #dde1e6;
+        --accent: #2f6fed;
+        --accent-text: #ffffff;
+        --ok: #1a7f37;
+        --error: #c62828;
+        --code-bg: #f0f2f5;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #111418;
+          --card: #1a1e24;
+          --text: #e6e9ed;
+          --muted: #9aa4af;
+          --border: #2c323a;
+          --accent: #5b8cff;
+          --accent-text: #0b0d10;
+          --ok: #4ac26b;
+          --error: #ff6b6b;
+          --code-bg: #22272e;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          16px/1.5 system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+      }
+      main {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 24px 16px 48px;
+      }
+      h1 {
+        font-size: 1.5rem;
+        margin: 0 0 4px;
+      }
+      h2 {
+        font-size: 1.05rem;
+        margin: 0 0 12px;
+      }
+      p {
+        margin: 0 0 12px;
+      }
+      .muted {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      section {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px;
+        margin-top: 16px;
+      }
+      label {
+        display: block;
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin: 10px 0 4px;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 9px 10px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg);
+        color: var(--text);
+        font: inherit;
+      }
+      textarea {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.8rem;
+        resize: vertical;
+        min-height: 72px;
+        word-break: break-all;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-top: 12px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 12px;
+      }
+      @media (max-width: 520px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .check {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 12px;
+        color: var(--text);
+        font-size: 0.95rem;
+      }
+      .check input {
+        width: auto;
+      }
+      button {
+        padding: 9px 16px;
+        border: 0;
+        border-radius: 8px;
+        background: var(--accent);
+        color: var(--accent-text);
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: transparent;
+        color: var(--accent);
+        border: 1px solid var(--border);
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .status {
+        font-size: 0.9rem;
+        margin-top: 10px;
+        min-height: 1.5em;
+      }
+      .status.ok {
+        color: var(--ok);
+      }
+      .status.error {
+        color: var(--error);
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      li {
+        border-top: 1px solid var(--border);
+        padding: 10px 0;
+      }
+      li:first-child {
+        border-top: 0;
+      }
+      code,
+      pre {
+        background: var(--code-bg);
+        border-radius: 6px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.8rem;
+      }
+      pre {
+        padding: 8px;
+        margin: 6px 0 0;
+        overflow-x: auto;
+      }
+      code {
+        padding: 1px 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Teste de notificações</h1>
+      <p class="muted">
+        Recebe notificações do Firebase neste navegador e dispara uma notificação para ele mesmo
+        pela API (<code>POST /notifications</code>).
+      </p>
+
+      <section>
+        <h2>1. Permitir notificações</h2>
+        <p class="muted">
+          O navegador gera um <strong>token</strong>: o endereço deste dispositivo no Firebase.
+        </p>
+        <div class="row">
+          <button id="enable">Permitir e gerar token</button>
+        </div>
+        <div id="enable-status" class="status"></div>
+        <label for="token">Token deste navegador</label>
+        <textarea id="token" readonly placeholder="O token aparece aqui"></textarea>
+        <div class="row">
+          <button id="copy" class="secondary" disabled>Copiar token</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>2. Enviar uma notificação para este navegador</h2>
+        <label for="api-key">API key (header <code>x-api-key</code>)</label>
+        <input id="api-key" type="password" autocomplete="off" placeholder="Valor de API_KEY" />
+        <div class="grid">
+          <div>
+            <label for="title">Título</label>
+            <input id="title" value="Olá!" />
+          </div>
+          <div>
+            <label for="priority">Prioridade</label>
+            <select id="priority">
+              <option value="high">high</option>
+              <option value="normal">normal</option>
+            </select>
+          </div>
+        </div>
+        <label for="body">Mensagem</label>
+        <input id="body" value="Notificação enviada pela fila" />
+        <label class="check">
+          <input id="silent" type="checkbox" />
+          Mensagem silenciosa (só <code>data</code>, sem título e texto)
+        </label>
+        <div class="row">
+          <button id="send" disabled>Enviar</button>
+        </div>
+        <div id="send-status" class="status"></div>
+        <p class="muted">
+          Fluxo: API → fila (SQS) → worker → Firebase → este navegador. Com a aba em segundo plano,
+          a notificação aparece no sistema.
+        </p>
+      </section>
+
+      <section>
+        <h2>3. Recebidas com a página aberta</h2>
+        <ul id="received">
+          <li class="muted">Nenhuma ainda.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>No celular</h2>
+        <p class="muted">
+          <strong>Android (Chrome):</strong> abra esta página e siga os passos acima.<br />
+          <strong>iPhone (iOS 16.4+):</strong> no Safari, toque em Compartilhar → "Adicionar à Tela
+          de Início", abra pelo ícone criado e então permita as notificações.
+        </p>
+      </section>
+    </main>
+    <script type="module" src="/test/app.js"></script>
+  </body>
+</html>

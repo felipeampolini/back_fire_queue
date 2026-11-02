@@ -10,6 +10,7 @@ const app = buildApp({
   logLevel: config.logLevel,
   apiKey: config.apiKey,
   publisher: createSqsPublisher(sqs, config.sqs.queueUrl),
+  firebaseWeb: config.firebaseWeb,
 });
 
 // Encerramento limpo (ex.: docker stop): para de aceitar conexões

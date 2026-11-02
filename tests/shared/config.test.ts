@@ -21,6 +21,7 @@ describe('loadConfig', () => {
       apiKey: validEnv.API_KEY,
       firebase: { credentialsPath: undefined, dryRun: false },
       worker: { batchSize: 10, maxAttempts: 5 },
+      firebaseWeb: undefined,
     });
   });
 
@@ -66,5 +67,26 @@ describe('loadConfig', () => {
 
   it('limita o lote do worker a 10 mensagens (máximo do SQS)', () => {
     expect(() => loadConfig({ ...validEnv, WORKER_BATCH_SIZE: '11' })).toThrow(/WORKER_BATCH_SIZE/);
+  });
+
+  it('habilita a página de teste só com toda a configuração web do Firebase', () => {
+    const web = {
+      FIREBASE_WEB_API_KEY: 'api-key',
+      FIREBASE_WEB_PROJECT_ID: 'projeto',
+      FIREBASE_WEB_MESSAGING_SENDER_ID: '123',
+      FIREBASE_WEB_APP_ID: '1:123:web:abc',
+      FIREBASE_WEB_VAPID_KEY: 'vapid',
+    };
+
+    expect(loadConfig({ ...validEnv, ...web }).firebaseWeb).toEqual({
+      apiKey: 'api-key',
+      projectId: 'projeto',
+      messagingSenderId: '123',
+      appId: '1:123:web:abc',
+      vapidKey: 'vapid',
+    });
+    expect(
+      loadConfig({ ...validEnv, ...web, FIREBASE_WEB_VAPID_KEY: '' }).firebaseWeb,
+    ).toBeUndefined();
   });
 });

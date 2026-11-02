@@ -1,0 +1,10 @@
+{
+  "name": "Teste de notificações",
+  "short_name": "Notificações",
+  "start_url": "/test/",
+  "scope": "/test/",
+  "display": "standalone",
+  "background_color": "#f6f7f9",
+  "theme_color": "#2f6fed",
+  "icons": [{ "src": "/test/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

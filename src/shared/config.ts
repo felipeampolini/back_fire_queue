@@ -21,6 +21,13 @@ const envSchema = z.object({
   GOOGLE_APPLICATION_CREDENTIALS: z.preprocess(emptyAsUndefined, z.string().optional()),
   // true = o FCM só valida a mensagem, sem entregar (útil sem dispositivo real)
   FCM_DRY_RUN: z.preprocess(emptyAsUndefined, z.stringbool().default(false)),
+  // Firebase Web (página de teste em /test). Valores públicos: identificam o
+  // projeto no navegador, não dão permissão de envio. Opcionais.
+  FIREBASE_WEB_API_KEY: z.preprocess(emptyAsUndefined, z.string().optional()),
+  FIREBASE_WEB_PROJECT_ID: z.preprocess(emptyAsUndefined, z.string().optional()),
+  FIREBASE_WEB_MESSAGING_SENDER_ID: z.preprocess(emptyAsUndefined, z.string().optional()),
+  FIREBASE_WEB_APP_ID: z.preprocess(emptyAsUndefined, z.string().optional()),
+  FIREBASE_WEB_VAPID_KEY: z.preprocess(emptyAsUndefined, z.string().optional()),
   // Worker: mensagens por leitura da fila (máximo do SQS: 10)
   WORKER_BATCH_SIZE: z.preprocess(
     emptyAsUndefined,
@@ -38,6 +45,16 @@ export type Config = {
   apiKey: string;
   firebase: { credentialsPath?: string; dryRun: boolean };
   worker: { batchSize: number; maxAttempts: number };
+  // Presente só se todas as variáveis FIREBASE_WEB_* estiverem definidas
+  firebaseWeb?: FirebaseWebConfig;
+};
+
+export type FirebaseWebConfig = {
+  apiKey: string;
+  projectId: string;
+  messagingSenderId: string;
+  appId: string;
+  vapidKey: string;
 };
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -48,6 +65,15 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   }
 
   const e = result.data;
+  const web = {
+    apiKey: e.FIREBASE_WEB_API_KEY,
+    projectId: e.FIREBASE_WEB_PROJECT_ID,
+    messagingSenderId: e.FIREBASE_WEB_MESSAGING_SENDER_ID,
+    appId: e.FIREBASE_WEB_APP_ID,
+    vapidKey: e.FIREBASE_WEB_VAPID_KEY,
+  };
+  const webComplete = Object.values(web).every((v) => v !== undefined);
+
   return {
     port: e.PORT,
     logLevel: e.LOG_LEVEL,
@@ -56,5 +82,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     apiKey: e.API_KEY,
     firebase: { credentialsPath: e.GOOGLE_APPLICATION_CREDENTIALS, dryRun: e.FCM_DRY_RUN },
     worker: { batchSize: e.WORKER_BATCH_SIZE, maxAttempts: e.WORKER_MAX_ATTEMPTS },
+    firebaseWeb: webComplete ? (web as FirebaseWebConfig) : undefined,
   };
 }
