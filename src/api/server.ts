@@ -1,10 +1,8 @@
-import Fastify from 'fastify';
+import { buildApp } from './app.js';
 
 const port = Number(process.env.PORT ?? 3000);
 
-const app = Fastify({ logger: { level: process.env.LOG_LEVEL ?? 'info' } });
-
-app.get('/health', async () => ({ status: 'ok' }));
+const app = buildApp();
 
 try {
   // 0.0.0.0 para aceitar conexões de fora do container

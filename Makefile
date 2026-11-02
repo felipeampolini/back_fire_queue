@@ -6,7 +6,7 @@ AWS = docker run --rm --network back_fire_queue_default \
 	amazon/aws-cli --endpoint-url http://elasticmq:9324
 QUEUE_ATTRS = ApproximateNumberOfMessages ApproximateNumberOfMessagesNotVisible
 
-.PHONY: up down logs install npm sh lint format typecheck build queues
+.PHONY: up down logs install npm sh lint format typecheck test test-watch build queues
 
 up: ## Sobe ElasticMQ, API e worker
 	docker compose up --build
@@ -34,6 +34,12 @@ format:
 
 typecheck:
 	$(RUN) npm run typecheck
+
+test: ## Roda os testes uma vez
+	$(RUN) npm test
+
+test-watch: ## Roda os testes e repete a cada alteração
+	$(RUN) npm run test:watch
 
 build: ## Gera a imagem de produção
 	docker build --target prod -t back-fire-queue .
