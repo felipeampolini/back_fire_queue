@@ -6,7 +6,7 @@ AWS = docker run --rm --network back_fire_queue_default \
 	amazon/aws-cli --endpoint-url http://elasticmq:9324
 QUEUE_ATTRS = ApproximateNumberOfMessages ApproximateNumberOfMessagesNotVisible
 
-.PHONY: up down logs install npm sh lint format typecheck test test-watch build queues postman
+.PHONY: up down logs install npm sh lint format typecheck test test-watch build queues postman api-key
 
 up: ## Sobe ElasticMQ, API e worker
 	docker compose up --build
@@ -43,6 +43,9 @@ test-watch: ## Roda os testes e repete a cada alteração
 
 build: ## Gera a imagem de produção
 	docker build --target prod -t back-fire-queue .
+
+api-key: ## Gera uma API key aleatória (48 caracteres hex) para colocar em API_KEY no .env
+	@docker run --rm node:24-alpine node -e "console.log(require('node:crypto').randomBytes(24).toString('hex'))"
 
 queues: ## Mostra quantas mensagens há na fila principal e na DLQ
 	@for q in notifications-queue notifications-dlq; do \

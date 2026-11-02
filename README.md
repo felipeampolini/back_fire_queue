@@ -23,6 +23,21 @@ make up                # sobe ElasticMQ (emulador de SQS), API e worker
 
 A porta pode ser alterada com `API_HOST_PORT` no `.env`.
 
+## API key
+
+O `POST /notifications` exige o header `x-api-key` com o valor da variável `API_KEY` (mínimo de 16 caracteres). As rotas `/health` e `/docs` são públicas.
+
+Para gerar uma chave:
+
+```bash
+make api-key
+# c78a4ca83235cd599d146b95765f469618d3bf52ed046a3e
+```
+
+Copie o valor para `API_KEY` no `.env` e reinicie a API (`make down && make up`). No Swagger, use o botão **Authorize**; no Postman, a variável `apiKey` do environment.
+
+A chave é única por ambiente e nunca deve ser versionada.
+
 ## Testes
 
 ```bash
