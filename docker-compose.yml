@@ -3,6 +3,8 @@ services:
     image: softwaremill/elasticmq-native:1.7.1
     ports:
       - '9324:9324' # API compatível com SQS
+    volumes:
+      - ./elasticmq.conf:/opt/elasticmq.conf:ro # declara as filas e a DLQ
 
   api:
     build:
