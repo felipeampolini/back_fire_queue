@@ -19,6 +19,7 @@ describe('loadConfig', () => {
       aws: { region: 'us-east-1', endpoint: 'http://elasticmq:9324' },
       sqs: { queueUrl: validEnv.SQS_QUEUE_URL, dlqUrl: validEnv.SQS_DLQ_URL },
       apiKey: validEnv.API_KEY,
+      firebase: { credentialsPath: undefined, dryRun: false },
     });
   });
 
@@ -47,5 +48,18 @@ describe('loadConfig', () => {
 
   it('exige API_KEY com pelo menos 16 caracteres', () => {
     expect(() => loadConfig({ ...validEnv, API_KEY: 'curta' })).toThrow(/API_KEY/);
+  });
+
+  it('lê a credencial do Firebase e o modo dry run', () => {
+    const config = loadConfig({
+      ...validEnv,
+      GOOGLE_APPLICATION_CREDENTIALS: '/app/secrets/firebase-sa.json',
+      FCM_DRY_RUN: 'true',
+    });
+
+    expect(config.firebase).toEqual({
+      credentialsPath: '/app/secrets/firebase-sa.json',
+      dryRun: true,
+    });
   });
 });

@@ -38,6 +38,23 @@ Copie o valor para `API_KEY` no `.env` e reinicie a API (`make down && make up`)
 
 A chave é única por ambiente e nunca deve ser versionada.
 
+## Firebase
+
+O worker envia as notificações com o [Firebase Admin SDK](https://firebase.google.com/docs/admin/setup), autenticado por uma **Service Account**:
+
+1. No console do Firebase: **Configurações do projeto → Contas de serviço → Gerar nova chave privada**.
+2. Salve o arquivo em `secrets/firebase-sa.json` (a pasta `secrets/` é ignorada pelo git e pelo Docker).
+3. No `.env`: `GOOGLE_APPLICATION_CREDENTIALS=/app/secrets/firebase-sa.json` (caminho dentro do container).
+
+Para validar a credencial sem entregar nada a nenhum dispositivo:
+
+```bash
+make fcm-check
+# Credencial do Firebase OK (dry run): projects/<seu-projeto>/messages/...
+```
+
+Com `FCM_DRY_RUN=true`, o worker envia todas as notificações em modo de validação: o Firebase confere a mensagem, mas não entrega.
+
 ## Testes
 
 ```bash
