@@ -6,7 +6,7 @@ AWS = docker run --rm --network back_fire_queue_default \
 	amazon/aws-cli --endpoint-url http://elasticmq:9324
 QUEUE_ATTRS = ApproximateNumberOfMessages ApproximateNumberOfMessagesNotVisible
 
-.PHONY: up down logs install npm sh lint format typecheck test test-watch build queues postman api-key fcm-check
+.PHONY: up down logs install npm sh lint format typecheck test test-watch build queues postman api-key fcm-check dlq dlq-redrive
 
 up: ## Sobe ElasticMQ, API e worker
 	docker compose up --build
@@ -49,6 +49,12 @@ api-key: ## Gera uma API key aleatória (48 caracteres hex) para colocar em API_
 
 fcm-check: ## Valida a credencial do Firebase (envio em dry run, nada é entregue)
 	docker compose run --rm --no-deps worker npm run -s fcm:check
+
+dlq: ## Lista as mensagens da DLQ e o motivo de cada uma (não remove nada)
+	docker compose run --rm worker npm run -s dlq -- list
+
+dlq-redrive: ## Devolve todas as mensagens da DLQ para a fila principal
+	docker compose run --rm worker npm run -s dlq -- redrive
 
 queues: ## Mostra quantas mensagens há na fila principal e na DLQ
 	@for q in notifications-queue notifications-dlq; do \

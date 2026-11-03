@@ -19,7 +19,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "fcm:check": "tsx src/scripts/fcm-check.ts"
+    "fcm:check": "tsx src/scripts/fcm-check.ts",
+    "dlq": "tsx src/scripts/dlq.ts"
   },
   "dependencies": {
     "@aws-sdk/client-sqs": "^3.1161.0",

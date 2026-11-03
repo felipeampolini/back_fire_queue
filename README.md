@@ -57,6 +57,19 @@ A mensagem original só é removida depois que a nova (ou a da DLQ) foi gravada:
 
 Ao receber `SIGTERM`/`SIGINT`, o worker para de ler a fila e termina as mensagens em andamento antes de sair.
 
+## DLQ (mensagens que esgotaram as tentativas)
+
+Mensagens que falharam em todas as tentativas, ou que estão fora do contrato, vão para a DLQ com o motivo no atributo `reason`. Nada é descartado sem registro.
+
+```bash
+make dlq          # lista as mensagens da DLQ e o motivo de cada uma (não remove nada)
+make dlq-redrive  # devolve todas para a fila principal, para nova tentativa
+```
+
+Fluxo típico: o Firebase ficou fora do ar (ou a credencial estava errada) → as mensagens esgotaram as tentativas e foram para a DLQ → depois de resolvido o problema, `make dlq-redrive` as reprocessa. Mensagens reprocessadas recomeçam a contagem de tentativas.
+
+O redrive grava cada mensagem na fila principal antes de removê-la da DLQ (no pior caso, uma duplicata; nunca uma perda). Na AWS, o console do SQS também oferece o redrive nativo (**Start DLQ redrive**).
+
 ## Firebase
 
 O worker envia as notificações com o [Firebase Admin SDK](https://firebase.google.com/docs/admin/setup), autenticado por uma **Service Account**:
@@ -98,6 +111,7 @@ São valores públicos (identificam o projeto no navegador; não permitem enviar
 ```bash
 make test      # testes automatizados (unitários e de integração)
 make postman   # collection do Postman contra a API rodando
+make queues    # quantidade de mensagens na fila principal e na DLQ
 ```
 
 ## Testes manuais com Postman
