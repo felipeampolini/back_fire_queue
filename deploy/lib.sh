@@ -3,7 +3,8 @@
 
 APP=back-fire-queue
 AWS_PROFILE=${AWS_PROFILE:-back-fire-queue}
-AWS_REGION=${AWS_REGION:-us-east-1}
+# Região liberada para o projeto pela política da organização (as demais são bloqueadas)
+AWS_REGION=${AWS_REGION:-us-east-2}
 QUEUE_NAME=notifications-queue
 DLQ_NAME=notifications-dlq
 PARAM_PREFIX=/back-fire-queue
