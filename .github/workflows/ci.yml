@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Um novo push na mesma branch cancela a execução anterior
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint, tipos, testes e build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # ElasticMQ para os testes de integração (cada teste cria as próprias filas)
+    services:
+      elasticmq:
+        image: softwaremill/elasticmq-native:1.7.1
+        ports:
+          - 9324:9324
+    env:
+      AWS_ENDPOINT_URL: http://localhost:9324
+      AWS_REGION: us-east-1
+      # Credenciais fictícias: o ElasticMQ não valida, mas o SDK exige alguma
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run typecheck
+      # O Firebase é simulado nos testes: não precisa de nenhum segredo
+      - run: npm test
+      - run: npm run build
+
+  docker:
+    name: Imagem de produção
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build --target prod -t back-fire-queue:ci .

@@ -1,5 +1,7 @@
 # back_fire_queue
 
+[![CI](https://github.com/felipeampolini/back_fire_queue/actions/workflows/ci.yml/badge.svg)](https://github.com/felipeampolini/back_fire_queue/actions/workflows/ci.yml)
+
 Fila de envio de notificações Firebase (FCM) com Node.js e AWS SQS.
 
 A API recebe pedidos de notificação, valida e publica numa fila SQS, respondendo imediatamente (`202 Accepted`). Um worker consome a fila e envia as notificações para o Firebase, com retentativas, backoff exponencial e fila de mensagens mortas (DLQ).
