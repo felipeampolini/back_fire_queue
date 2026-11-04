@@ -1,6 +1,19 @@
-# back_fire_queue
+# Back Fire Queue
 
 [![CI](https://github.com/felipeampolini/back_fire_queue/actions/workflows/ci.yml/badge.svg)](https://github.com/felipeampolini/back_fire_queue/actions/workflows/ci.yml)
+[![Demo](https://img.shields.io/badge/demo-online-brightgreen?logo=swagger&logoColor=white)](https://3-17-5-149.sslip.io/docs)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
+![Node.js](https://img.shields.io/badge/Node.js-24-5FA04E?logo=nodedotjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)
+![Fastify](https://img.shields.io/badge/Fastify-5-000000?logo=fastify&logoColor=white)
+![Zod](https://img.shields.io/badge/Zod-4-3E67B1?logo=zod&logoColor=white)
+![AWS SQS](https://img.shields.io/badge/AWS-SQS-FF9900)
+![AWS EC2](https://img.shields.io/badge/AWS-EC2-FF9900)
+![Firebase](https://img.shields.io/badge/Firebase-FCM-DD2C00?logo=firebase&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+![Caddy](https://img.shields.io/badge/Caddy-HTTPS-1F88C0?logo=caddy&logoColor=white)
+![Vitest](https://img.shields.io/badge/tested_with-Vitest-6E9F18?logo=vitest&logoColor=white)
 
 Fila de envio de notificações Firebase (FCM) com Node.js e AWS SQS.
 
