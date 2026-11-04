@@ -1,0 +1,46 @@
+# Produção (EC2): API e worker com a imagem de produção, SQS real e Caddy na
+# frente fazendo HTTPS. O .env é gerado por deploy/remote-deploy.sh.
+#   docker compose -f docker-compose.prod.yml up -d --build
+
+x-app: &app
+  build:
+    context: .
+    target: prod
+  image: back-fire-queue:prod
+  env_file: .env
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m # sem limite, os logs podem encher o disco
+      max-file: '3'
+
+services:
+  api:
+    <<: *app
+    # Sem "ports": a API só é acessível pela rede interna, através do Caddy
+
+  worker:
+    <<: *app
+    command: ['node', 'dist/worker/index.js']
+    volumes:
+      - ./secrets:/app/secrets:ro # credencial do Firebase: só o worker recebe
+
+  caddy:
+    image: caddy:2.8.4-alpine
+    restart: unless-stopped
+    ports:
+      - '80:80' # usado pelo Let's Encrypt para validar o domínio e redirecionar para HTTPS
+      - '443:443'
+    environment:
+      DOMAIN: ${DOMAIN:?defina DOMAIN no .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data # certificados: guardados para não pedir de novo a cada restart
+      - caddy_config:/config
+    depends_on:
+      - api
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -6,7 +6,8 @@ AWS = docker run --rm --network back_fire_queue_default \
 	amazon/aws-cli --endpoint-url http://elasticmq:9324
 QUEUE_ATTRS = ApproximateNumberOfMessages ApproximateNumberOfMessagesNotVisible
 
-.PHONY: up down logs install npm sh lint format typecheck test test-watch build queues postman api-key fcm-check dlq dlq-redrive
+.PHONY: up down logs install npm sh lint format typecheck test test-watch build queues postman api-key fcm-check dlq dlq-redrive \
+	aws-setup aws-status aws-url aws-api-key aws-deploy aws-logs aws-ps aws-dlq aws-dlq-redrive aws-run aws-teardown
 
 up: ## Sobe ElasticMQ, API e worker
 	docker compose up --build
@@ -68,3 +69,39 @@ postman: ## Roda a collection do Postman contra a API (precisa do `make up` roda
 	docker run --rm --network back_fire_queue_default -v "$(CURDIR)/docs/postman:/etc/newman" \
 		postman/newman:6-alpine run back_fire_queue.postman_collection.json \
 		-e local.postman_environment.json --env-var baseUrl=http://api:3000 --env-var "apiKey=$$API_KEY"
+
+# ---------- AWS (produção) ----------
+# Usam o perfil "back-fire-queue" do AWS CLI (configurado em ~/.aws).
+
+aws-setup: ## Cria filas, permissões e servidor na AWS (pode rodar de novo)
+	deploy/aws-setup.sh
+
+aws-status: ## Mostra a URL pública e testa o /health
+	@deploy/aws.sh status
+
+aws-url: ## Mostra a URL pública
+	@deploy/aws.sh url
+
+aws-api-key: ## Mostra a API key de produção
+	@deploy/aws.sh api-key
+
+aws-deploy: ## Atualiza o servidor com o código do GitHub (branch main) e reinicia
+	@deploy/aws.sh deploy
+
+aws-logs: ## Últimas 100 linhas de log (ex.: make aws-logs s=worker)
+	@deploy/aws.sh logs $(s)
+
+aws-ps: ## Estado dos containers no servidor
+	@deploy/aws.sh ps
+
+aws-dlq: ## Lista a DLQ de produção
+	@deploy/aws.sh dlq
+
+aws-dlq-redrive: ## Devolve a DLQ de produção para a fila principal
+	@deploy/aws.sh dlq-redrive
+
+aws-run: ## Roda um comando no servidor (ex.: make aws-run c="df -h")
+	@deploy/aws.sh run "$(c)"
+
+aws-teardown: ## Apaga tudo o que foi criado na AWS
+	deploy/aws-teardown.sh

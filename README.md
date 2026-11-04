@@ -106,6 +106,32 @@ Configuração: a página só é publicada quando todas as variáveis `FIREBASE_
 
 São valores públicos (identificam o projeto no navegador; não permitem enviar notificações). Notificações push exigem HTTPS ou `localhost`.
 
+## Deploy na AWS
+
+Uma instância EC2 roda API, worker e [Caddy](https://caddyserver.com/) (HTTPS automático) com `docker-compose.prod.yml`, usando o SQS real.
+
+```
+Internet ──HTTPS──► Caddy ──► API ──► SQS ◄── worker ──► Firebase
+                    └──────── EC2 (Docker Compose) ───────┘
+```
+
+- **Sem chaves de acesso no servidor:** a EC2 recebe credenciais temporárias por uma IAM role com permissão apenas para as duas filas e para os parâmetros do projeto.
+- **Segredos no SSM Parameter Store:** a credencial do Firebase e a API key ficam criptografadas (SecureString); o servidor as busca a cada deploy e gera o `.env`.
+- **Sem SSH:** nenhuma porta além de 80/443 fica aberta; os comandos remotos usam o SSM Run Command.
+- **Domínio:** `<ip-com-hífens>.sslip.io`, que resolve para o IP da instância e permite emitir o certificado HTTPS sem registrar um domínio.
+
+Pré-requisitos: AWS CLI configurado com o perfil `back-fire-queue` (`docker run --rm -it -v ~/.aws:/root/.aws amazon/aws-cli configure --profile back-fire-queue`), `.env` e `secrets/firebase-sa.json` preenchidos localmente.
+
+```bash
+make aws-setup      # cria filas, parâmetros, permissões, firewall e a EC2 (o servidor se configura sozinho)
+make aws-status     # URL pública e /health
+make aws-api-key    # API key de produção
+make aws-deploy     # atualiza o servidor com a branch main do GitHub
+make aws-logs       # logs (s=api | s=worker | s=caddy)
+make aws-dlq        # DLQ de produção (aws-dlq-redrive para reprocessar)
+make aws-teardown   # apaga tudo
+```
+
 ## Testes
 
 ```bash

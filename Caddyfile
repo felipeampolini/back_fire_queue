@@ -1,0 +1,6 @@
+# Proxy reverso com HTTPS automático (certificado do Let's Encrypt).
+# DOMAIN vem do .env, ex.: 3-90-12-34.sslip.io (aponta para o IP 3.90.12.34).
+{$DOMAIN} {
+	encode gzip
+	reverse_proxy api:3000
+}
