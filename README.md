@@ -1,7 +1,7 @@
 # Back Fire Queue
 
 [![CI](https://github.com/felipeampolini/back_fire_queue/actions/workflows/ci.yml/badge.svg)](https://github.com/felipeampolini/back_fire_queue/actions/workflows/ci.yml)
-[![Demo](https://img.shields.io/badge/demo-online-brightgreen?logo=swagger&logoColor=white)](https://3-17-5-149.sslip.io/docs)
+[![Demo](https://img.shields.io/badge/demo-offline-lightgrey?logo=swagger&logoColor=white)](#demonstração)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 ![Node.js](https://img.shields.io/badge/Node.js-24-5FA04E?logo=nodedotjs&logoColor=white)
@@ -21,7 +21,7 @@ A API recebe pedidos de notificação, valida e publica numa fila SQS, responden
 
 ## Sumário
 
-- [Demonstração na AWS](#demonstração-na-aws)
+- [Demonstração](#demonstração)
 - [Arquitetura](#arquitetura)
 - [Stack](#stack)
 - [Estrutura do projeto](#estrutura-do-projeto)
@@ -37,16 +37,18 @@ A API recebe pedidos de notificação, valida e publica numa fila SQS, responden
 - [Decisões técnicas](#decisões-técnicas)
 - [Comandos](#comandos)
 
-## Demonstração na AWS
+## Demonstração
 
-| Endereço                                        | O que é                                  |
-| ----------------------------------------------- | ---------------------------------------- |
-| [`/docs`](https://3-17-5-149.sslip.io/docs)     | Swagger UI (documentação interativa)     |
-| [`/test/`](https://3-17-5-149.sslip.io/test/)   | Página para receber notificações         |
-| [`/health`](https://3-17-5-149.sslip.io/health) | Health check                             |
-| [`docs/postman/`](docs/postman)                 | Collection + environment `AWS` e `local` |
+A demonstração pública na AWS foi desativada e os recursos foram removidos. O projeto roda inteiro localmente com `make up` (veja [Rodando localmente](#rodando-localmente-passo-a-passo)) e pode voltar ao ar com `make aws-setup` (veja [Deploy na AWS](#deploy-na-aws)).
 
-O `POST /notifications` exige a API key de produção, que não é publicada no repositório.
+| Endereço                        | O que é                                  |
+| ------------------------------- | ---------------------------------------- |
+| `/docs`                         | Swagger UI (documentação interativa)     |
+| `/test/`                        | Página para receber notificações         |
+| `/health`                       | Health check                             |
+| [`docs/postman/`](docs/postman) | Collection + environment `AWS` e `local` |
+
+Localmente, os endereços ficam em `http://localhost:3000`. O `POST /notifications` exige a API key, que não é publicada no repositório.
 
 ## Arquitetura
 
@@ -387,7 +389,7 @@ A collection fica em [`docs/postman/`](docs/postman):
 | ----------------------------------------- | -------------------------------------------------------- |
 | `back_fire_queue.postman_collection.json` | 15 requisições de sucesso e de erro, cada uma com testes |
 | `local.postman_environment.json`          | Ambiente local (`baseUrl` = `http://localhost:3000`)     |
-| `aws.postman_environment.json`            | Ambiente na AWS (`baseUrl` = URL pública)                |
+| `aws.postman_environment.json`            | Ambiente na AWS (`baseUrl` = saída de `make aws-url`)    |
 
 1. No Postman, **Import** → selecione a collection e os environments.
 2. Selecione o environment (**local** ou **AWS**) e preencha `apiKey`. Se mudou `API_HOST_PORT`, ajuste também o `baseUrl`.
